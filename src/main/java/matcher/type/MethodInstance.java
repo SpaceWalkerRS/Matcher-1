@@ -389,7 +389,7 @@ public final class MethodInstance extends MemberInstance<MethodInstance> {
 				}
 			}
 		}
-
+/*
 		anyUnmatched = false;
 
 		for (MethodVarInstance v : vars) {
@@ -410,7 +410,7 @@ public final class MethodInstance extends MemberInstance<MethodInstance> {
 				}
 			}
 		}
-
+*/
 		return true;
 	}
 

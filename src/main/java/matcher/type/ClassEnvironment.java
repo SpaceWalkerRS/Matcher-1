@@ -426,7 +426,11 @@ public final class ClassEnvironment implements ClassEnv {
 
 		for (ClassNode cn : cls.getAsmNodes()) {
 			if (cls.isInput() && cls.getSignature() == null && cn.signature != null) {
-				cls.setSignature(ClassSignature.parse(cn.signature, cls.getEnv()));
+				try {
+					cls.setSignature(ClassSignature.parse(cn.signature, cls.getEnv()));
+				} catch (Throwable t) {
+					throw new RuntimeException("unable to parse signature " + cn.signature + " for class " + cn.name);
+				}
 			}
 
 			boolean isEnum = (cn.access & Opcodes.ACC_ENUM) != 0;

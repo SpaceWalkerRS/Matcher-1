@@ -38,7 +38,9 @@ public class MatchesIo {
 			MethodInstance currentMethod = null;
 			String line;
 
+			int lineNumber = 1;
 			while ((line = reader.readLine()) != null) {
+				lineNumber++;
 				if (line.isEmpty()) continue;
 
 				if (state == ParserState.START) {
@@ -260,6 +262,9 @@ public class MatchesIo {
 							int idxB = Integer.parseInt(line.substring(pos + 1));
 							MethodInstance matchedMethod = currentMethod.getMatch();
 							assert matchedMethod != null; // matchedMethod must have been matched before, so shouldn't be null
+							if (matchedMethod == null) {
+								continue;
+							}
 
 							MethodVarInstance[] varsA, varsB;
 							String type;
@@ -271,7 +276,11 @@ public class MatchesIo {
 							} else {
 								type = "var";
 								varsA = currentMethod.getVars();
-								varsB = matchedMethod.getVars();
+								try {
+									varsB = matchedMethod.getArgs();
+								} catch (Exception e) {
+									throw new IllegalStateException("issue on line " + lineNumber + ": \'" + line + "\'", e);
+								}
 							}
 
 							if (idxA < 0 || idxA >= varsA.length) {
@@ -284,7 +293,12 @@ public class MatchesIo {
 							} else {
 								varsA[idxA].setMatchable(true);
 								varsB[idxB].setMatchable(true);
-								matcher.match(varsA[idxA], varsB[idxB]);
+								try {
+									matcher.match(varsA[idxA], varsB[idxB]);
+								} catch (Throwable t) {
+									System.err.println("could not match method vars - ignoring");
+									t.printStackTrace();
+								}
 							}
 						}
 					} else if (line.startsWith("\t\tmau\t") || line.startsWith("\t\tmvu\t")) { // method arg or method var unmatchable
