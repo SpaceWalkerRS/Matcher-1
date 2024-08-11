@@ -17,10 +17,10 @@ import matcher.Matcher;
 import matcher.NameType;
 import matcher.config.Config;
 import matcher.gui.menu.MainMenuBar;
-import matcher.mapping.MappingFormat;
 import matcher.srcprocess.BuiltinDecompiler;
 import matcher.type.ClassEnvironment;
 import matcher.type.MatchType;
+import net.fabricmc.mappingio.format.MappingFormat;
 
 import java.io.File;
 import java.nio.file.Path;

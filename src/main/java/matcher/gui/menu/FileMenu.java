@@ -15,12 +15,12 @@ import matcher.gui.Gui.SelectedFile;
 import matcher.gui.menu.LoadMappingsPane.MappingsLoadSettings;
 import matcher.gui.menu.LoadProjectPane.ProjectLoadSettings;
 import matcher.gui.menu.SaveMappingsPane.MappingsSaveSettings;
-import matcher.mapping.MappingFormat;
-import matcher.mapping.MappingReader;
 import matcher.mapping.Mappings;
 import matcher.serdes.MatchesIo;
 import matcher.type.ClassEnvironment;
 import matcher.type.MatchType;
+import net.fabricmc.mappingio.MappingReader;
+import net.fabricmc.mappingio.format.MappingFormat;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -53,21 +53,21 @@ public class FileMenu extends Menu {
 		getItems().add(menuItem);
 		menuItem.setOnAction(event -> loadMappings(null));
 
-		menuItem = new MenuItem("Load mappings (Enigma)");
+		menuItem = new MenuItem("Load mappings (Enigma Directory)");
 		getItems().add(menuItem);
-		menuItem.setOnAction(event -> loadMappings(MappingFormat.ENIGMA));
-
+		menuItem.setOnAction(event -> loadMappings(MappingFormat.ENIGMA_DIR));
+/*
 		menuItem = new MenuItem("Load mappings (MCP dir)");
 		getItems().add(menuItem);
 		menuItem.setOnAction(event -> loadMappings(MappingFormat.MCP));
-
+*/
 		menuItem = new MenuItem("Save mappings");
 		getItems().add(menuItem);
-		menuItem.setOnAction(event -> saveMappings(MappingFormat.TINY_2));
+		menuItem.setOnAction(event -> saveMappings(MappingFormat.TINY_2_FILE));
 
-		menuItem = new MenuItem("Save mappings (Enigma)");
+		menuItem = new MenuItem("Save mappings (Enigma Directory)");
 		getItems().add(menuItem);
-		menuItem.setOnAction(event -> saveMappings(MappingFormat.ENIGMA));
+		menuItem.setOnAction(event -> saveMappings(MappingFormat.ENIGMA_DIR));
 
 		menuItem = new MenuItem("Clear mappings");
 		getItems().add(menuItem);
@@ -192,7 +192,7 @@ public class FileMenu extends Menu {
 		if (file == null) return;
 
 		try {
-			String[] namespaces = MappingReader.getNamespaces(file, format);
+			String[] namespaces = MappingReader.getNamespaces(file, format).toArray(String[]::new);
 
 			Dialog<MappingsLoadSettings> dialog = new Dialog<>();
 			//dialog.initModality(Modality.APPLICATION_MODAL);
@@ -312,7 +312,7 @@ public class FileMenu extends Menu {
 	}
 
 	private static MappingFormat getFormat(Path file) {
-		if (Files.isDirectory(file)) return MappingFormat.ENIGMA;
+		if (Files.isDirectory(file)) return MappingFormat.ENIGMA_DIR;
 
 		String name = file.getFileName().toString().toLowerCase(Locale.ENGLISH);
 

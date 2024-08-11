@@ -3,6 +3,12 @@ package matcher.mapping;
 import matcher.NameType;
 import matcher.Util;
 import matcher.type.*;
+import net.fabricmc.mappingio.MappedElementKind;
+import net.fabricmc.mappingio.MappingReader;
+import net.fabricmc.mappingio.MappingVisitor;
+import net.fabricmc.mappingio.MappingWriter;
+import net.fabricmc.mappingio.adapter.MappingSourceNsSwitch;
+import net.fabricmc.mappingio.format.MappingFormat;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -23,7 +29,7 @@ public class Mappings {
 		Set<String> warnedClasses = new HashSet<>();
 
 		try {
-			MappingReader.read(path, format, nsSource, nsTarget, new MappingVisitor() {
+			MappingReader.read(path, format, new MappingSourceNsSwitch(new MappingVisitor() {
 				@Override
 				public void visitNamespaces(String srcNamespace, List<String> dstNamespaces) {
 					dstNs = dstNamespaces.indexOf(nsTarget);
@@ -101,7 +107,7 @@ public class Mappings {
 				}
 
 				@Override
-				public boolean visitMethodVar(int asmIndex, int lvIndex, int startOpIdx, String srcArgName) {
+				public boolean visitMethodVar(int asmIndex, int lvIndex, int startOpIdx, int endOpIdx, String srcArgName) {
 					arg = null;
 
 					cur = var = getMethodVar(-1, lvIndex, startOpIdx, asmIndex, false);
@@ -387,7 +393,7 @@ public class Mappings {
 				private MethodVarInstance var;
 
 				private Matchable<?> cur;
-			});
+			}, nsSource, true));
 		} catch (Throwable t) {
 			clear(env);
 			throw t;
@@ -481,7 +487,7 @@ public class Mappings {
 		List<MethodVarInstance> vars = new ArrayList<>();
 		Set<Set<MethodInstance>> exportedHierarchies = verbosity == MappingsExportVerbosity.MINIMAL ? Util.newIdentityHashSet() : null;
 
-		try (MappingWriter writer = new MappingWriter(file, format)) {
+		try (MappingWriter writer = MappingWriter.create(file, format)) {
 			writer.visitNamespaces(nsNames.get(0), nsNames.subList(1, nsNames.size()));
 
 			for (ClassInstance cls : classes) {
@@ -509,11 +515,14 @@ public class Mappings {
 					continue; // no data for the class, skip
 				}
 
-				writer.visitClass(srcClsName, dstClassNames);
+				writer.visitClass(srcClsName);
+				for (int i = 0; i < dstClassNames.length; i++) {
+					writer.visitDstName(MappedElementKind.CLASS, i, dstClassNames[i]);
+				}
 
 				// comment
 
-				if (cls.getMappedComment() != null) writer.visitClassComment(srcClsName, dstClassNames, cls.getMappedComment());
+				if (cls.getMappedComment() != null) writer.visitComment(MappedElementKind.CLASS, cls.getMappedComment());
 
 				if (fieldsFirst) {
 					exportFields(cls, srcClsName, dstClassNames, format, nsTypes,
@@ -544,7 +553,7 @@ public class Mappings {
 			MappingFormat format, List<NameType> nsTypes, MappingsExportVerbosity verbosity,
 			String[] dstMemberNames, String[] dstMemberDescs, String[] dstVarNames,
 			List<MethodInstance> methods, List<MethodVarInstance> vars, Set<Set<MethodInstance>> exportedHierarchies,
-			MappingWriter writer) {
+			MappingWriter writer) throws IOException {
 		for (MethodInstance m : cls.getMethods()) {
 			if (shouldExport(m, format, nsTypes, verbosity, exportedHierarchies)) methods.add(m);
 		}
@@ -581,11 +590,15 @@ public class Mappings {
 			}
 
 			String desc = getDesc(m, nsTypes.get(0));
-			writer.visitMethod(srcClsName, srcName, desc, dstClassNames, dstMethodNames, dstMemberDescs);
+			writer.visitMethod(srcName, desc);
+			for (int i = 0; i < dstMethodNames.length; i++) {
+				writer.visitDstName(MappedElementKind.METHOD, i, dstMethodNames[i]);
+				writer.visitDstDesc(MappedElementKind.METHOD, i, dstMemberDescs[i]);
+			}
 
 			if (format.supportsComments) {
 				String comment = m.getMappedComment();
-				if (comment != null) writer.visitMethodComment(srcClsName, srcName, desc, dstClassNames, dstMethodNames, dstMemberDescs, comment);
+				if (comment != null) writer.visitComment(MappedElementKind.METHOD, comment);
 			}
 
 			// method args, vars
@@ -629,12 +642,15 @@ public class Mappings {
 
 						if (hasAnyDstName) {
 							if (isArg) {
-								writer.visitMethodArg(srcClsName, srcName, desc, var.getIndex(), var.getLvIndex(), srcVarName,
-										dstClassNames, dstMethodNames, dstMemberDescs, dstVarNames);
+								writer.visitMethodArg(var.getIndex(), var.getLvIndex(), srcVarName);
+								for (int i = 0; i < dstVarNames.length; i++) {
+									writer.visitDstName(MappedElementKind.METHOD_ARG, i, dstVarNames[i]);
+								}
 							} else {
-								writer.visitMethodVar(srcClsName, srcName, desc,
-										var.getAsmIndex(), var.getLvIndex(), var.getStartOpIdx(), srcVarName,
-										dstClassNames, dstMethodNames, dstMemberDescs, dstVarNames);
+								writer.visitMethodVar(var.getAsmIndex(), var.getLvIndex(), var.getStartOpIdx(), -1, srcVarName);
+								for (int i = 0; i < dstVarNames.length; i++) {
+									writer.visitDstName(MappedElementKind.METHOD_VAR, i, dstVarNames[i]);
+								}
 							}
 						}
 
@@ -643,14 +659,9 @@ public class Mappings {
 
 							if (comment != null) {
 								if (isArg) {
-									writer.visitMethodArgComment(srcClsName, srcName, desc, var.getIndex(), var.getLvIndex(), srcVarName,
-											dstClassNames, dstMethodNames, dstMemberDescs, dstVarNames,
-											comment);
+									writer.visitComment(MappedElementKind.METHOD_ARG, comment);
 								} else {
-									writer.visitMethodVarComment(srcClsName, srcName, desc,
-											var.getAsmIndex(), var.getLvIndex(), var.getStartOpIdx(), srcVarName,
-											dstClassNames, dstMethodNames, dstMemberDescs, dstVarNames,
-											comment);
+									writer.visitComment(MappedElementKind.METHOD_VAR, comment);
 								}
 							}
 						}
@@ -668,7 +679,7 @@ public class Mappings {
 			MappingFormat format, List<NameType> nsTypes,
 			String[] dstMemberNames, String[] dstMemberDescs,
 			List<FieldInstance> fields,
-			MappingWriter writer) {
+			MappingWriter writer) throws IOException {
 		for (FieldInstance f : cls.getFields()) {
 			if (shouldExport(f, format, nsTypes)) fields.add(f);
 		}
@@ -694,11 +705,15 @@ public class Mappings {
 			}
 
 			String desc = getDesc(f, nsTypes.get(0));
-			writer.visitField(srcClsName, srcName, desc, dstClassNames, dstMemberNames, dstMemberDescs);
+			writer.visitField(srcName, desc);
+			for (int i = 0; i < dstMemberNames.length; i++) {
+				writer.visitDstName(MappedElementKind.FIELD, i, dstMemberNames[i]);
+				writer.visitDstDesc(MappedElementKind.FIELD, i, dstMemberDescs[i]);
+			}
 
 			if (format.supportsComments) {
 				String comment = f.getMappedComment();
-				if (comment != null) writer.visitFieldComment(srcClsName, srcName, desc, dstClassNames, dstMemberNames, dstMemberDescs, comment);
+				if (comment != null) writer.visitComment(MappedElementKind.FIELD, comment);
 			}
 		}
 
