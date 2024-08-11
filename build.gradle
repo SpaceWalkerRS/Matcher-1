@@ -2,9 +2,9 @@ plugins {
 	id 'java-library'
 	id 'application'
 	id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
-	id 'org.openjfx.javafxplugin' version '0.0.10'
-	id 'de.jjohannes.extra-java-module-info' version '0.5'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+	id 'org.openjfx.javafxplugin' version '0.1.0'
+	id 'org.gradlex.extra-java-module-info' version '1.8'
 }
 
 repositories {
@@ -26,44 +26,43 @@ sourceSets {
 }
 
 javafx {
-	version = "11.0.2"
+	version = "21"
 	modules = [ 'javafx.controls', 'javafx.web' ]
 }
 
 java {
 	modularity.inferModulePath = true
-	sourceCompatibility = JavaVersion.VERSION_11
-	targetCompatibility = JavaVersion.VERSION_11
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
 
-	if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_11)) {
+	if (!JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_21)) {
 		toolchain {
-			languageVersion = JavaLanguageVersion.of(11)
+			languageVersion = JavaLanguageVersion.of(21)
 		}
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	it.options.encoding = "UTF-8"
-	it.options.release = 11
+	it.options.release = 21
 }
 
 dependencies {
     implementation "com.github.javaparser:javaparser-core:3.8.3"
 	implementation "org.quiltmc:procyon-quilt-compilertools:0.5.35.local"
-	api "org.ow2.asm:asm:9.4"
-	implementation "org.ow2.asm:asm-commons:9.4"
-	api "org.ow2.asm:asm-tree:9.4"
-	implementation "org.ow2.asm:asm-util:9.4"
+	api "org.ow2.asm:asm:9.7"
+	implementation "org.ow2.asm:asm-commons:9.7"
+	api "org.ow2.asm:asm-tree:9.7"
+	implementation "org.ow2.asm:asm-util:9.7"
 	implementation "org.quiltmc:cfr:0.0.6"
-	implementation "org.quiltmc:quiltflower:1.9.0"
+	implementation "org.vineflower:vineflower:1.10.1"
 }
 
-// TODO: Add Automatic-Module-Name to all these in Quilt forks
 extraJavaModuleInfo {
 	automaticModule("cfr-0.0.6.jar", "cfr")
 	automaticModule("procyon-quilt-compilertools-0.5.35.local.jar", "procyon.compilertools")
 	automaticModule("procyon-quilt-core-0.5.35.local.jar", "procyon.core")
-	automaticModule("quiltflower-1.9.0.jar", "intellij.fernflower")
+	automaticModule("vineflower-1.10.1.jar", "intellij.fernflower")
 }
 
 application {

@@ -21,7 +21,7 @@ public class Fernflower implements Decompiler {
 		properties.putAll(Map.of(
 				IFernflowerPreferences.REMOVE_SYNTHETIC, "0", // Easier to match synthetic methods
 				IFernflowerPreferences.REMOVE_BRIDGE, "0", // Easier to match bridge methods
-				IFernflowerPreferences.USE_JAD_VARNAMING, "1" // JAD-style names are often more readable
+				IFernflowerPreferences.MARK_CORRESPONDING_SYNTHETICS, 1 // easier to find names of anonymous classes and lambdas
 		));
 
 		try (ResultSaver resultSaver = new ResultSaver()) {

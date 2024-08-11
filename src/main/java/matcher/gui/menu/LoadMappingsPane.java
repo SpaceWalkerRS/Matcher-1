@@ -32,7 +32,7 @@ class LoadMappingsPane extends GridPane {
 
 		add(new Label("Target:"), 0, 2);
 		cbNsDst = new ComboBox<>(FXCollections.observableArrayList(namespaces));
-		cbNsDst.getSelectionModel().select(1);
+		cbNsDst.getSelectionModel().select(2);
 		add(cbNsDst, 1, 2);
 		ObservableList<MappingField> dstValues = FXCollections.observableArrayList(MappingField.VALUES);
 		dstValues.remove(MappingField.PLAIN);

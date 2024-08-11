@@ -34,6 +34,7 @@ import java.util.function.DoubleConsumer;
 import java.util.stream.Collectors;
 
 public class Gui extends Application {
+	public static String name;
 	@Override
 	public void start(Stage stage) {
 		Matcher.init();
@@ -356,6 +357,7 @@ public class Gui extends Application {
 		if (file == null) return null;
 
 		lastChooserFile = file.getParentFile();
+		name = file.getName();
 
 		return new SelectedFile(file.toPath(), fileChooser.getSelectedExtensionFilter());
 	}
@@ -420,6 +422,8 @@ public class Gui extends Application {
 
 		if (lastChooserFile != null)
 			fileChooser.setInitialDirectory(lastChooserFile);
+		if (name != null)
+			fileChooser.setInitialFileName(name);
 
 		return fileChooser;
 	}
