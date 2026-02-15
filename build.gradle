@@ -60,14 +60,14 @@ dependencies {
 	implementation "org.ow2.asm:asm-util:9.7"
 	implementation "net.fabricmc:mapping-io:0.6.1"
 	implementation "org.quiltmc:cfr:0.0.6"
-	implementation "org.vineflower:vineflower:1.10.1"
+	implementation "org.vineflower:vineflower:1.11.1"
 }
 
 extraJavaModuleInfo {
 	automaticModule("cfr-0.0.6.jar", "cfr")
 	automaticModule("procyon-quilt-compilertools-0.5.35.local.jar", "procyon.compilertools")
 	automaticModule("procyon-quilt-core-0.5.35.local.jar", "procyon.core")
-	automaticModule("vineflower-1.10.1.jar", "intellij.fernflower")
+	automaticModule("vineflower-1.11.1.jar", "intellij.fernflower")
 }
 
 application {

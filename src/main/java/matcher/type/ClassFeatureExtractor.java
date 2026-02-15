@@ -140,6 +140,7 @@ public class ClassFeatureExtractor implements LocalClassEnv {
 		classPathIndex.clear();
 		classes.clear();
 		arrayClasses.clear();
+		initStep = 0;
 	}
 
 	@Override
